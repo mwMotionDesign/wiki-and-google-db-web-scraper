@@ -1,3 +1,2 @@
-wiki-and-google-db-web-scraper
-
+# wiki-and-google-db-web-scraper
 Searching German Wiki Foods and creating an array of all foods. Use the array to search google for the nutritional value of each food. Skipping Errors with Error Messages and Screenshots. Waiting between every Google Search. Waiting longer if 2 Errors after another and trying thos 2 again. Waiting even longer after more than 2 Errors after another but not trying again. Breaking after more than 5 Error Messages..
