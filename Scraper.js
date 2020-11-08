@@ -31,7 +31,6 @@ async function scrapeFoodList() {
         );
         iLi++;
     }
-    // }
 
     await console.log("searchFor: ", searchFor, "\n\n");
     await browser.close();
