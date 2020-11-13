@@ -74,6 +74,10 @@ async function scrapeGoogleCals() {
 
     await page.setViewport({ width: dimensions.width, height: dimensions.height })
 
+    let scrapedEntries = 0;
+    let invalidEntries = 0;
+    let invalidValues = 0;
+    let validEntries = 0;
 
     let cals = "";
     let errorCascade = 0;
@@ -91,6 +95,8 @@ async function scrapeGoogleCals() {
         await page.keyboard.press("Enter")
 
         try {
+            scrapedEntries++;
+
             await page.waitForSelector(".webanswers-webanswers_table__webanswers-table", { timeout: 2000 });
 
             await page.waitForTimeout(2000);
@@ -105,34 +111,46 @@ async function scrapeGoogleCals() {
             if (isValid) {
                 await dbList.push({ name: FoodList[i], kcal: cals });
                 await fs.writeFileSync("./data/foodDB.json", JSON.stringify(dbList, null, 2));
-                await console.log(FoodList[i] + ": ", cals, "kcal");
+                validEntries++;
+                await console.log(FoodList[i] + ": " + cals + " kcal");
             }
             else {
-                await console.log(FoodList[i] + ": ", "No Valid Info found!");
+                invalidValues++;
+                await console.log("Werte-Fehler:", invalidEntries, "- " + FoodList[i]);
             }
         }
         catch (error) {
             await page.screenshot({ path: "./screenshots/" + i + " - " + FoodList[i] + ".png", fullPage: false });
             await errorMsgs++;
-            await console.log("Error", errorMsgs, "from", FoodList[i]);
+            await console.log("Eintrag-Fehler:", errorMsgs, "- " + FoodList[i]);
             errorCascade++;
+            invalidEntries++;
             if (errorCascade == 2) {
                 await console.log(errorCascade, "Fehler nacheinander - Warte für 15 Sekunden und versuche nochmal");
                 await page.waitForTimeout(15000);
+                invalidEntries = invalidEntries - 2;
+                scrapedEntries = scrapedEntries - 2;
                 i = i - 2;
             }
-            else if (errorCascade > 2 && errorCascade <= 5) {
-                await console.log(errorCascade, "- Immer noch Fehler - Warte für 5 Sekunden und mache trotzdem weiter");
+            else if (errorCascade > 2 && errorCascade <= 4) {
+                await console.log(errorCascade - 2, "/ 2 Neuversuche - Immer noch Fehler - Warte für 2 Sekunden und mache trotzdem weiter");
+                await page.waitForTimeout(2000);
+            }
+            else if (errorCascade > 4 && errorCascade <= 7) {
+                await console.log(errorCascade - 4, "/ 4 weitere Fehler - Warte für 5 Sekunden und mache trotzdem weiter");
                 await page.waitForTimeout(5000);
             }
             else if (errorCascade > 7) {
-                await console.log("\n", errorCascade, "Fehler nacheinander - Bot Protection probably enabled - Exiting ...");
+                await console.log(errorCascade - 4, "/ 4 weitere Fehler");
+                await console.log("\nEvtl. Bot Schutz aktiv - Beende Programm!");
                 break
             }
         }
     }
 
-    await console.log("\n");
+    validEntries = (scrapedEntries - (invalidEntries + invalidValues));
+
+    await console.log("\nDurchsuchte Einträge:", scrapedEntries, "\nNicht gefundene Einträge:", invalidEntries, "\nUnklare Werte:", invalidValues, "\n\nGefundene Einträge:", validEntries, "von", scrapedEntries, "= " + (validEntries / (scrapedEntries / 100)) + " %\n\n");
 
     await browser.close();
 }
