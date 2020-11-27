@@ -27,7 +27,8 @@ async function scrapeFoodList() {
     while (searchFor[searchFor.length - 1] != endWord) {
         searchFor.push(
             await page.evaluate((nOfI) => {
-                return document.querySelectorAll(".jsAdd table tbody tr td ul li a")[nOfI].innerHTML;
+                let name = document.querySelectorAll(".jsAdd table tbody tr td ul li a")[nOfI].innerHTML;
+                return name
             }, iLi)
         );
         iLi++;
